@@ -1,0 +1,38 @@
+# -*- coding: utf-8 -*-
+"""
+Fichier de métadonnées pour le plugin ForestDL.
+"""
+
+[general]
+name=ForestDL
+qgisMinimumVersion=3.28
+description=Plugin de deep learning pour la photogrammétrie et l'interprétation d'images, spécialisé dans l'inventaire des mangroves et forêts
+version=1.0.0
+author=ForestDL Team
+email=contact@forestdl.org
+
+about=ForestDL est un plugin QGIS spécialisé dans le deep learning pour la photogrammétrie et l'interprétation d'images, avec un focus particulier sur l'inventaire des mangroves et des forêts. Ce plugin combine les fonctionnalités du Semi-Automatic Classification Plugin (SCP) et de l'Orfeo ToolBox (OTB), tout en ajoutant des capacités d'apprentissage profond et des calculs allométriques et dendrométriques spécifiques.
+
+tracker=https://github.com/forestdl/forestdl/issues
+repository=https://github.com/forestdl/forestdl
+homepage=https://forestdl.org
+
+# Tags are comma separated with spaces allowed
+tags=deep learning, remote sensing, forest, mangrove, biomass, carbon, allometry, photogrammetry, image processing, segmentation, classification, LLM
+
+category=Analysis
+icon=icons/forestdl.png
+
+# experimental flag
+experimental=False
+
+# deprecated flag (applies to the whole plugin, not just a single version)
+deprecated=False
+
+# Since QGIS 3.8, a comma separated list of plugins to be installed
+# (or upgraded) can be specified.
+# Check the documentation for more information.
+plugin_dependencies=
+
+# If the plugin can run on QGIS Server.
+server=False
