@@ -80,13 +80,15 @@ class ODMProcessor(QObject):
     # Public API
     # ------------------------------------------------------------------
 
-    def run(self, image_paths: list, options: dict, output_dir: str):
+    def run(self, image_paths: list, options: dict, output_dir: str,
+            gcp_path: str = None):
         """
         Main entry point. Call this from the worker thread.
 
         :param image_paths: list of absolute paths to drone images
-        :param options: dict of NodeODM processing options
-        :param output_dir: directory where orthophoto.tif will be saved
+        :param options:     dict of NodeODM processing options
+        :param output_dir:  directory where orthophoto.tif will be saved
+        :param gcp_path:    optional path to a GCP file (improves precision to < 3 cm)
         """
         if not REQUESTS_AVAILABLE:
             self.task_failed.emit(
@@ -96,7 +98,7 @@ class ODMProcessor(QObject):
             return
 
         try:
-            self._run_internal(image_paths, options, output_dir)
+            self._run_internal(image_paths, options, output_dir, gcp_path)
         except Exception as exc:
             if not self._cancelled:
                 self.task_failed.emit(str(exc))
@@ -155,16 +157,19 @@ class ODMProcessor(QObject):
         self.status_changed.emit(f"Tâche créée: {uuid}")
         return uuid
 
-    def _upload_images(self, uuid: str, image_paths: list):
-        """Upload all images to the task."""
+    def _upload_images(self, uuid: str, image_paths: list, gcp_path: str = None):
+        """Upload all images (and optional GCP file) to the task."""
         total = len(image_paths)
         for idx, path in enumerate(image_paths):
             if self._cancelled:
                 return
             fname = os.path.basename(path)
             self.status_changed.emit(f"Envoi image {idx + 1}/{total}: {fname}")
+            # Detect MIME type by extension
+            ext = os.path.splitext(fname)[1].lower()
+            mime = "image/tiff" if ext in (".tif", ".tiff") else "image/jpeg"
             with open(path, "rb") as f:
-                files = {"images": (fname, f, "image/jpeg")}
+                files = {"images": (fname, f, mime)}
                 resp = requests.post(
                     f"{self.server_url}/task/new/upload/{uuid}",
                     headers=self._headers(),
@@ -172,9 +177,23 @@ class ODMProcessor(QObject):
                     timeout=120,
                 )
                 resp.raise_for_status()
-            # Report upload progress (first 30%)
-            upload_pct = int((idx + 1) / total * 30)
+            upload_pct = int((idx + 1) / total * 28)
             self.progress_changed.emit(upload_pct)
+
+        # Upload GCP file if provided
+        if gcp_path and os.path.exists(gcp_path):
+            self.status_changed.emit(f"Envoi fichier GCP: {os.path.basename(gcp_path)}")
+            with open(gcp_path, "rb") as f:
+                files = {"images": ("gcp_list.txt", f, "text/plain")}
+                resp = requests.post(
+                    f"{self.server_url}/task/new/upload/{uuid}",
+                    headers=self._headers(),
+                    files=files,
+                    timeout=30,
+                )
+                resp.raise_for_status()
+            self.progress_changed.emit(30)
+            self.status_changed.emit("Fichier GCP envoyé — précision < 3 cm activée.")
 
     def _commit_task(self, uuid: str):
         """Start processing the uploaded images."""
@@ -269,7 +288,8 @@ class ODMProcessor(QObject):
         except Exception:
             pass
 
-    def _run_internal(self, image_paths: list, options: dict, output_dir: str):
+    def _run_internal(self, image_paths: list, options: dict,
+                      output_dir: str, gcp_path: str = None):
         """Main processing pipeline."""
         # 1. Check server
         self._check_server()
@@ -283,8 +303,8 @@ class ODMProcessor(QObject):
             self._delete_task(uuid)
             return
 
-        # 3. Upload images
-        self._upload_images(uuid, image_paths)
+        # 3. Upload images (+ GCP si fourni)
+        self._upload_images(uuid, image_paths, gcp_path)
         if self._cancelled:
             self._delete_task(uuid)
             return
