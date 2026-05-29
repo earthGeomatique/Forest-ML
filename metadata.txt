@@ -1,0 +1,18 @@
+[general]
+name=ForestDL
+qgisMinimumVersion=3.28
+description=Plugin ODM + YOLO pour orthophotos drone et détection d'objets (mangroves, arbres, véhicules, bâtiments)
+version=2.0.0
+author=ForestDL Team
+email=contact@forestdl.org
+about=Plugin QGIS intégrant OpenDroneMap (ODM) pour la production d'orthophotos vraies à partir d'images drone, et YOLOv8 pour la détection automatique d'objets : mangroves, arbres fruitiers, véhicules, bâtiments.
+tracker=https://github.com/earthgeomatique/forest-ml/issues
+repository=https://github.com/earthgeomatique/forest-ml
+hasProcessingProvider=no
+tags=drone,orthophoto,detection,yolo,odm,mangrove,arbre,foret,deeplearning
+homepage=https://github.com/earthgeomatique/forest-ml
+category=Analysis
+icon=icons/icon.png
+experimental=False
+deprecated=False
+server=False
